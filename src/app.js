@@ -13,8 +13,8 @@ const orbitControls = new OrbitControls(camera, renderer.domElement);
 camera.position.z = 10;
 
 
-let coordinates =[];
- coordinates = createWall(100,5,10)
+let coordinates = [];
+coordinates = createWall(100, 5, 10)
 
 const flacheDaten = coordinates.flat();
 
@@ -39,16 +39,16 @@ function createWall(pointsCount, width, height) {
 
     let wall = [];
     let temp = [];
-    
+
     let noise;
-    
+
 
 
     for (let x = 0; x < pointsCount; x++) {
 
         for (let y = 0; y < pointsCount; y++) {
             noise = THREE.MathUtils.randFloat(-0.03, 0.02);
-                temp = [(x / (pointsCount - 1))*width, (y / (pointsCount-1))*height, noise];
+            temp = [(x / (pointsCount - 1)) * width, (y / (pointsCount - 1)) * height, noise];
 
             wall.push(temp);
         }
@@ -57,6 +57,28 @@ function createWall(pointsCount, width, height) {
     return wall;
 
 }
+function kdTree(wall, depth = 0) {
+
+if (!wall || wall.length === 0) return null;
+    const axis = depth % 3; 
+    const sorted = wall.toSorted((a, b) => a[axis] - b[axis]);
+
+    const medianIndex = Math.floor((sorted.length) / 2);
+    const nodePoint = sorted[medianIndex];
+
+    return {
+        point:nodePoint,
+        left: kdTree(sorted.slice(0,medianIndex), depth +1),
+        right: kdTree(sorted.slice(medianIndex +1), depth + 1)
+    }
+
+    
+
+}
+
+function searchInKdTree(){}
+
+
 
 function animate(time) {
 
