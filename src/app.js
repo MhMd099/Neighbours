@@ -23,7 +23,6 @@ console.log(search);
 
 const positions = new Float32Array(flacheDaten);
 const positions2 = new Float32Array(point);
-// KORREKT: Extrahiert nur die .point-Arrays und flacht sie auf [x1, y1, z1, x2, y2, z2, ...] ab
 const gefundenePunkteFlach = search.map(item => item.point).flat();
 const n = new Float32Array(gefundenePunkteFlach);
 const bufferGeometryn = new THREE.BufferGeometry();
@@ -61,7 +60,7 @@ function createWall(pointsCount, width, height) {
     for (let x = 0; x < pointsCount; x++) {
 
         for (let y = 0; y < pointsCount; y++) {
-          //  noise = THREE.MathUtils.randFloat(-0.03, 0.02);
+          noise = THREE.MathUtils.randFloat(-0.03, 0.02);
             temp = [(x / (pointsCount - 1)) * width, (y / (pointsCount - 1)) * height, noise];
 
             wall.push(temp);
@@ -89,7 +88,7 @@ function kdTree(wall, depth = 0) {
 
 
 }
-function searchInKdTree(target, node, depth = 0, k = 5, neighbors = []) {
+function searchInKdTree(target, node, depth = 0, k = 9999, neighbors = []) {
     if (node === null) return neighbors;
 
     const dx = target[0] - node.point[0];
@@ -106,9 +105,23 @@ function searchInKdTree(target, node, depth = 0, k = 5, neighbors = []) {
     }
 
     const axis = depth % 3;
+    const isBacktracingLeft = target[axis] < node.point[axis];
+    const secondaryNode = isBacktracingLeft ? node.right : node.left;
+    const primaryNode = isBacktracingLeft ? node.left : node.right;
 
-    const nextNode = target[axis] < node.point[axis] ? node.left : node.right;
-    searchInKdTree(target, nextNode, depth + 1, k, neighbors);
+    searchInKdTree(target,primaryNode,depth + 1, k, neighbors);
+  const planeDistance = Math.abs(target[axis] - node.point[axis]);
+
+
+    const worstDistance = neighbors[neighbors.length - 1].distance;
+
+    if (neighbors.length < k || planeDistance < worstDistance) {
+        searchInKdTree(target, secondaryNode, depth + 1, k, neighbors);
+
+
+    }
+
+
 
     return neighbors;
 }
