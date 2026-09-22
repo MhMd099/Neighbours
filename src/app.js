@@ -17,8 +17,8 @@ let coordinates = [];
 coordinates = createWall(100, 5, 10)
 let myTree = kdTree(coordinates);
 const flacheDaten = coordinates.flat();
-const point = [1.3,3.7,0];
-const search = searchInKdTree(point,myTree,6);
+const point = [1.3, 3.7, 0];
+const search = searchInKdTree(point, myTree, 6);
 console.log(search);
 
 const positions = new Float32Array(flacheDaten);
@@ -28,15 +28,15 @@ const n = new Float32Array(gefundenePunkteFlach);
 const bufferGeometryn = new THREE.BufferGeometry();
 const bufferGeometry = new THREE.BufferGeometry();
 const bufferGeometry2 = new THREE.BufferGeometry();
-bufferGeometry2.setAttribute('position', new THREE.BufferAttribute(positions2,3));
+bufferGeometry2.setAttribute('position', new THREE.BufferAttribute(positions2, 3));
 bufferGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-bufferGeometryn.setAttribute('position', new THREE.BufferAttribute(n,3));
-const nMaterial = new THREE.PointsMaterial({ color:0xDBFA93, size : 0.05});
+bufferGeometryn.setAttribute('position', new THREE.BufferAttribute(n, 3));
+const nMaterial = new THREE.PointsMaterial({ color: 0xDBFA93, size: 0.05 });
 const pointsMaterial = new THREE.PointsMaterial({ color: 0xff0000, size: 0.01 });
-const pointsMaterial2 = new THREE.PointsMaterial({color: 0x00FFA9, size: 0.05});
-const points2 = new THREE.Points(bufferGeometry2,pointsMaterial2);
+const pointsMaterial2 = new THREE.PointsMaterial({ color: 0x00FFA9, size: 0.05 });
+const points2 = new THREE.Points(bufferGeometry2, pointsMaterial2);
 const points = new THREE.Points(bufferGeometry, pointsMaterial);
-const searchs = new THREE.Points(bufferGeometryn,nMaterial);
+const searchs = new THREE.Points(bufferGeometryn, nMaterial);
 
 
 //console.log(myTree.left.left.left.point);
@@ -44,9 +44,6 @@ const searchs = new THREE.Points(bufferGeometryn,nMaterial);
 scene.add(searchs);
 scene.add(points2);
 scene.add(points);
-
-
-
 
 function createWall(pointsCount, width, height) {
 
@@ -60,7 +57,7 @@ function createWall(pointsCount, width, height) {
     for (let x = 0; x < pointsCount; x++) {
 
         for (let y = 0; y < pointsCount; y++) {
-          noise = THREE.MathUtils.randFloat(-0.03, 0.02);
+            noise = THREE.MathUtils.randFloat(-0.03, 0.02);
             temp = [(x / (pointsCount - 1)) * width, (y / (pointsCount - 1)) * height, noise];
 
             wall.push(temp);
@@ -84,11 +81,8 @@ function kdTree(wall, depth = 0) {
         left: kdTree(sorted.slice(0, medianIndex), depth + 1),
         right: kdTree(sorted.slice(medianIndex + 1), depth + 1)
     }
-
-
-
 }
-function searchInKdTree(target, node, depth = 0, k = 9999, neighbors = []) {
+function searchInKdTree(target, node, depth = 0, k = 8, neighbors = []) {
     if (node === null) return neighbors;
 
     const dx = target[0] - node.point[0];
@@ -108,22 +102,63 @@ function searchInKdTree(target, node, depth = 0, k = 9999, neighbors = []) {
     const isBacktracingLeft = target[axis] < node.point[axis];
     const secondaryNode = isBacktracingLeft ? node.right : node.left;
     const primaryNode = isBacktracingLeft ? node.left : node.right;
-
-    searchInKdTree(target,primaryNode,depth + 1, k, neighbors);
-  const planeDistance = Math.abs(target[axis] - node.point[axis]);
-
-
+    searchInKdTree(target, primaryNode, depth + 1, k, neighbors);
+    const planeDistance = Math.abs(target[axis] - node.point[axis]);
     const worstDistance = neighbors[neighbors.length - 1].distance;
-
     if (neighbors.length < k || planeDistance < worstDistance) {
         searchInKdTree(target, secondaryNode, depth + 1, k, neighbors);
+    }
+    return neighbors;
+}
+function addNormal(neighbors = []) {
+    const N = neighbors.length;
+    if (N === 0) return null;
 
+    let sumX = 0, sumY = 0, sumZ = 0;
 
+    for (let i = 0; i < N; i++) {
+        sumX += neighbors[i].point[0];
+        sumY += neighbors[i].point[1];
+        sumZ += neighbors[i].point[2];
     }
 
+    const centerX = sumX / N;
+    const centerY = sumY / N;
+    const centerZ = sumZ / N;
 
+    const spread = [];
+    for (let i = 0; i < N; i++) {
+        spread.push({
+            x: neighbors[i].point[0] - centerX,
+            y: neighbors[i].point[1] - centerY,
+            z: neighbors[i].point[2] - centerZ
+        });
+    }
 
-    return neighbors;
+    let cXX = 0, cXY = 0, cXZ = 0;
+    let cYY = 0, cYZ = 0, cZZ = 0;
+
+    for (let i = 0; i < N; i++) {
+        const p = spread[i];
+        cXX += p.x * p.x;
+        cXY += p.x * p.y;
+        cXZ += p.x * p.z;
+        cYY += p.y * p.y;
+        cYZ += p.y * p.z;
+        cZZ += p.z * p.z;
+    }
+
+    const covarianceMatrix = [
+        [cXX / N, cXY / N, cXZ / N],
+        [cXY / N, cYY / N, cYZ / N], // Symmetrisch: cYX = cXY
+        [cXZ / N, cYZ / N, cZZ / N]  // Symmetrisch: cZX = cXZ, cZY = cYZ
+    ];
+
+    return {
+        centerPoint: [centerX, centerY, centerZ],
+        spread: spread,
+        covarianceMatrix: covarianceMatrix
+    };
 }
 
 
