@@ -110,11 +110,17 @@ function searchInKdTree(target, node, depth = 0, k = 8, neighbors = []) {
     }
     return neighbors;
 }
+
 function addNormal(neighbors = []) {
     const N = neighbors.length;
-    if (N === 0) return null;
+    if (N < 3) return null;
 
-    let sumX = 0, sumY = 0, sumZ = 0;
+    // ---------------------------------
+    // SCHRITT 1: Schwerpunkt berechnen
+    // ---------------------------------
+    let sumX = 0;
+    let sumY = 0;
+    let sumZ = 0;
 
     for (let i = 0; i < N; i++) {
         sumX += neighbors[i].point[0];
@@ -126,38 +132,95 @@ function addNormal(neighbors = []) {
     const centerY = sumY / N;
     const centerZ = sumZ / N;
 
-    const spread = [];
+    // ---------------------------------
+    // SCHRITT 2: Punkte um Schwerpunkt
+    // verschieben
+    // ---------------------------------
+    let cXX = 0;
+    let cXY = 0;
+    let cXZ = 0;
+
+    let cYY = 0;
+    let cYZ = 0;
+    let cZZ = 0;
+
     for (let i = 0; i < N; i++) {
-        spread.push({
-            x: neighbors[i].point[0] - centerX,
-            y: neighbors[i].point[1] - centerY,
-            z: neighbors[i].point[2] - centerZ
-        });
+        const x = neighbors[i].point[0] - centerX;
+        const y = neighbors[i].point[1] - centerY;
+        const z = neighbors[i].point[2] - centerZ;
+
+        // ---------------------------------
+        // SCHRITT 3: Kovarianz sammeln
+        // ---------------------------------
+        cXX += x * x;
+        cXY += x * y;
+        cXZ += x * z;
+
+        cYY += y * y;
+        cYZ += y * z;
+
+        cZZ += z * z;
     }
 
-    let cXX = 0, cXY = 0, cXZ = 0;
-    let cYY = 0, cYZ = 0, cZZ = 0;
-
-    for (let i = 0; i < N; i++) {
-        const p = spread[i];
-        cXX += p.x * p.x;
-        cXY += p.x * p.y;
-        cXZ += p.x * p.z;
-        cYY += p.y * p.y;
-        cYZ += p.y * p.z;
-        cZZ += p.z * p.z;
-    }
-
-    const covarianceMatrix = [
+    // ---------------------------------
+    // SCHRITT 4: Durch N teilen
+    // ---------------------------------
+    const covarianceMatrix = new Matrix([
         [cXX / N, cXY / N, cXZ / N],
-        [cXY / N, cYY / N, cYZ / N], // Symmetrisch: cYX = cXY
-        [cXZ / N, cYZ / N, cZZ / N]  // Symmetrisch: cZX = cXZ, cZY = cYZ
-    ];
+        [cXY / N, cYY / N, cYZ / N],
+        [cXZ / N, cYZ / N, cZZ / N]
+    ]);
+
+    // ---------------------------------
+    // SCHRITT 5:
+    // Eigenwerte + Eigenvektoren
+    // ---------------------------------
+    const evd = new EigenvalueDecomposition(covarianceMatrix);
+    const eigenvalues = evd.realEigenvalues;
+    const eigenvectors = evd.eigenvectorMatrix;
+
+    // ---------------------------------
+    // SCHRITT 6:
+    // kleinsten Eigenwert suchen
+    // ---------------------------------
+    let minIndex = 0;
+
+    for (let i = 1; i < eigenvalues.length; i++) {
+        if (eigenvalues[i] < eigenvalues[minIndex]) {
+            minIndex = i;
+        }
+    }
+
+    // ---------------------------------
+    // SCHRITT 7:
+    // zugehörigen Eigenvektor holen
+    // ---------------------------------
+    let nx = eigenvectors.get(0, minIndex);
+    let ny = eigenvectors.get(1, minIndex);
+    let nz = eigenvectors.get(2, minIndex);
+
+    // ---------------------------------
+    // SCHRITT 8:
+    // Normalenvektor ist normalerweise
+    // bereits Länge 1.
+    // Sicherheitshalber normalisieren.
+    // ---------------------------------
+    const length = Math.sqrt(
+        nx * nx +
+        ny * ny +
+        nz * nz
+    );
+
+    nx /= length;
+    ny /= length;
+    nz /= length;
 
     return {
         centerPoint: [centerX, centerY, centerZ],
-        spread: spread,
-        covarianceMatrix: covarianceMatrix
+
+        covarianceMatrix: covarianceMatrix.to2DArray(),
+
+        normal: [nx, ny, nz]
     };
 }
 
