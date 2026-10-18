@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { CSS2DRenderer, CSS2DObject, OrbitControls } from 'three/examples/jsm/Addons.js';
+import { EigenvalueDecomposition, Matrix } from 'ml-matrix';
 
 
 const scene = new THREE.Scene();
@@ -19,8 +20,8 @@ let myTree = kdTree(coordinates);
 const flacheDaten = coordinates.flat();
 const point = [1.3, 3.7, 0];
 const search = searchInKdTree(point, myTree, 6);
-console.log(search);
-
+//console.log(search);
+const normale = addNormal(search);
 const positions = new Float32Array(flacheDaten);
 const positions2 = new Float32Array(point);
 const gefundenePunkteFlach = search.map(item => item.point).flat();
@@ -31,6 +32,7 @@ const bufferGeometry2 = new THREE.BufferGeometry();
 bufferGeometry2.setAttribute('position', new THREE.BufferAttribute(positions2, 3));
 bufferGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 bufferGeometryn.setAttribute('position', new THREE.BufferAttribute(n, 3));
+
 const nMaterial = new THREE.PointsMaterial({ color: 0xDBFA93, size: 0.05 });
 const pointsMaterial = new THREE.PointsMaterial({ color: 0xff0000, size: 0.01 });
 const pointsMaterial2 = new THREE.PointsMaterial({ color: 0x00FFA9, size: 0.05 });
@@ -38,13 +40,23 @@ const points2 = new THREE.Points(bufferGeometry2, pointsMaterial2);
 const points = new THREE.Points(bufferGeometry, pointsMaterial);
 const searchs = new THREE.Points(bufferGeometryn, nMaterial);
 
+const normalStart = new THREE.Vector3(...normale.centerPoint);
+const normalEnd = normalStart.clone().add(
+    new THREE.Vector3(...normale.normal).multiplyScalar(2)
+);
+const normalGeometry = new THREE.BufferGeometry().setFromPoints([
+    normalStart,
+    normalEnd
+]);
+const normalMaterial = new THREE.LineBasicMaterial({ color: 0x800080 });
+const normalLine = new THREE.Line(normalGeometry, normalMaterial);
 
 //console.log(myTree.left.left.left.point);
 
 scene.add(searchs);
 scene.add(points2);
 scene.add(points);
-
+scene.add(normalLine);
 function createWall(pointsCount, width, height) {
 
     let wall = [];
