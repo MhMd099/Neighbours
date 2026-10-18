@@ -14,31 +14,32 @@ const orbitControls = new OrbitControls(camera, renderer.domElement);
 camera.position.z = 10;
 
 
+
 let coordinates = [];
 coordinates = createWall(100, 5, 10)
 let myTree = kdTree(coordinates);
 const flacheDaten = coordinates.flat();
-const point = [1.3, 3.7, 0];
-const search = searchInKdTree(point, myTree, 6);
+const TargetPoint = [1.3, 3.7, 0];
+const search = searchInKdTree(TargetPoint, myTree, 90);
 //console.log(search);
 const normale = addNormal(search);
-const positions = new Float32Array(flacheDaten);
-const positions2 = new Float32Array(point);
-const gefundenePunkteFlach = search.map(item => item.point).flat();
-const n = new Float32Array(gefundenePunkteFlach);
-const bufferGeometryn = new THREE.BufferGeometry();
-const bufferGeometry = new THREE.BufferGeometry();
-const bufferGeometry2 = new THREE.BufferGeometry();
-bufferGeometry2.setAttribute('position', new THREE.BufferAttribute(positions2, 3));
-bufferGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-bufferGeometryn.setAttribute('position', new THREE.BufferAttribute(n, 3));
+const wallPositions = new Float32Array(flacheDaten);
+const targetPointPosition = new Float32Array(TargetPoint);
+const flatNeighborCoordinates = search.map(item => item.point).flat();
+const neighborPositions = new Float32Array(flatNeighborCoordinates);
+const neighborPointsGeometry = new THREE.BufferGeometry();
+const wallGeometry = new THREE.BufferGeometry();
+const targetPointGeometry = new THREE.BufferGeometry();
+targetPointGeometry.setAttribute('position', new THREE.BufferAttribute(targetPointPosition, 3));
+wallGeometry.setAttribute('position', new THREE.BufferAttribute(wallPositions, 3));
+neighborPointsGeometry.setAttribute('position', new THREE.BufferAttribute(neighborPositions, 3));
 
-const nMaterial = new THREE.PointsMaterial({ color: 0xDBFA93, size: 0.05 });
-const pointsMaterial = new THREE.PointsMaterial({ color: 0xff0000, size: 0.01 });
-const pointsMaterial2 = new THREE.PointsMaterial({ color: 0x00FFA9, size: 0.05 });
-const points2 = new THREE.Points(bufferGeometry2, pointsMaterial2);
-const points = new THREE.Points(bufferGeometry, pointsMaterial);
-const searchs = new THREE.Points(bufferGeometryn, nMaterial);
+const neighborPointsMaterial = new THREE.PointsMaterial({ color: 0xDBFA93, size: 0.05 });
+const wallMaterial = new THREE.PointsMaterial({ color: 0xff0000, size: 0.01 });
+const targetPointMaterial = new THREE.PointsMaterial({ color: 0x00FFA9, size: 0.05 });
+const targetPoint = new THREE.Points(targetPointGeometry, targetPointMaterial);
+const wallPoints = new THREE.Points(wallGeometry, wallMaterial);
+const neighborPoints = new THREE.Points(neighborPointsGeometry, neighborPointsMaterial);
 
 const normalStart = new THREE.Vector3(...normale.centerPoint);
 const normalEnd = normalStart.clone().add(
@@ -53,9 +54,9 @@ const normalLine = new THREE.Line(normalGeometry, normalMaterial);
 
 //console.log(myTree.left.left.left.point);
 
-scene.add(searchs);
-scene.add(points2);
-scene.add(points);
+scene.add(neighborPoints);
+scene.add(targetPoint);
+scene.add(wallPoints);
 scene.add(normalLine);
 function createWall(pointsCount, width, height) {
 
@@ -83,18 +84,24 @@ function kdTree(wall, depth = 0) {
 
     if (!wall || wall.length === 0) return null;
     const axis = depth % 3;
+    //Sortiert die Punkte aufsteigend nach den Achsen
+    //Am Anfang ist die X-Achse betroffen 
     const sorted = wall.toSorted((a, b) => a[axis] - b[axis]);
-
+    //Median von den sortierten Punkten nach [axis] bestimmen
     const medianIndex = Math.floor((sorted.length) / 2);
+    //Den Wert des Medians holen
     const nodePoint = sorted[medianIndex];
 
     return {
+        // Ein Objekt mit dem Median und die "benachbarten" Punkten erstellen
         point: nodePoint,
+        //                   Schneidet alles bis zum Index des Medians ab
+        //                      ohne depth + 1 wandert er nicht zur nächsten Achse (Y) usw..
         left: kdTree(sorted.slice(0, medianIndex), depth + 1),
         right: kdTree(sorted.slice(medianIndex + 1), depth + 1)
     }
 }
-function searchInKdTree(target, node, depth = 0, k = 8, neighbors = []) {
+function searchInKdTree(target, node, depth = 0, k = 14, neighbors = []) {
     if (node === null) return neighbors;
 
     const dx = target[0] - node.point[0];
@@ -226,12 +233,14 @@ function addNormal(neighbors = []) {
     nx /= length;
     ny /= length;
     nz /= length;
+    if(nz<0){
+        nz = nz * (-1);
+    }
 
     return {
         centerPoint: [centerX, centerY, centerZ],
 
         covarianceMatrix: covarianceMatrix.to2DArray(),
-
         normal: [nx, ny, nz]
     };
 }
