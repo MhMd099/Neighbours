@@ -43,8 +43,10 @@ const neighborPoints = new THREE.Points(neighborPointsGeometry, neighborPointsMa
 
 const normalStart = new THREE.Vector3(...normale.centerPoint);
 const normalEnd = normalStart.clone().add(
-    new THREE.Vector3(...normale.normal).multiplyScalar(2)
+    new THREE.Vector3(...normale.normal).multiplyScalar(6)
 );
+
+console.log(normale.covarianceMatrix);
 const normalGeometry = new THREE.BufferGeometry().setFromPoints([
     normalStart,
     normalEnd
@@ -70,7 +72,7 @@ function createWall(pointsCount, width, height) {
     for (let x = 0; x < pointsCount; x++) {
 
         for (let y = 0; y < pointsCount; y++) {
-            noise = THREE.MathUtils.randFloat(-0.03, 0.02);
+            noise = THREE.MathUtils.randFloat(-0.0, 0.02);
             temp = [(x / (pointsCount - 1)) * width, (y / (pointsCount - 1)) * height, noise];
 
             wall.push(temp);
@@ -101,7 +103,10 @@ function kdTree(wall, depth = 0) {
         right: kdTree(sorted.slice(medianIndex + 1), depth + 1)
     }
 }
-function searchInKdTree(target, node, depth = 0, k = 14, neighbors = []) {
+
+
+
+function searchInKdTree(target, node, depth = 0, k = 20, neighbors = []) {
     if (node === null) return neighbors;
 
     const dx = target[0] - node.point[0];
@@ -233,7 +238,7 @@ function addNormal(neighbors = []) {
     nx /= length;
     ny /= length;
     nz /= length;
-    if(nz<0){
+    if (nz < 0) {
         nz = nz * (-1);
     }
 
