@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { CSS2DRenderer, CSS2DObject, OrbitControls } from 'three/examples/jsm/Addons.js';
 import { addNormal, createWall, here, kdTree, searchInKdTree } from './alghorithms.js';
-import { ladePunktwolke } from './simulations.js';
+import { ladePunktwolkeSim } from './simulations.js';
+import { ladePunktwolke } from './receiveData.js';
 
 
 
@@ -23,7 +24,7 @@ async function initScene() {
     let myTree = kdTree(coordinatesWall);
     const flacheDaten = coordinatesWall.flat();
     let coordinatesHaltestelle = [];
-    coordinatesHaltestelle = await ladePunktwolke('../src/Haltestelle.txt');
+    coordinatesHaltestelle = await ladePunktwolkeSim('../src/Haltestelle.txt');
     let myTreeHaltestelle = kdTree(coordinatesHaltestelle);
     const flacheDatenHaltestelle = coordinatesHaltestelle.flat();
     const TargetPoint = [1.3, 3.7, 0];
@@ -74,7 +75,7 @@ async function initScene() {
     //console.log(myTree.left.left.left.point);
 
 
-
+    await ladePunktwolke();
     scene.add(neighborPoints);
     scene.add(targetPoint);
     // scene.add(wallPoints);

@@ -1,0 +1,1 @@
+Für die Visualisierung der Daten wurde die Bibliothek Three.js ausgewählt. Three.js ist eine kostenlose, open-source JavaScript Bibliothek, die früher für die Erzeugung und Anzeige GPU-beschleunigte 3D Grafiken, Animationen und interaktiven Inhalt unmittelbar in dem Web-Browser war. 

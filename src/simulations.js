@@ -1,4 +1,4 @@
-export async function ladePunktwolke(dateiPfad) {
+export async function ladePunktwolkeSim(dateiPfad) {
     const antwort = await fetch(dateiPfad);
     const csvText = await antwort.text();
     console.log(csvText);
