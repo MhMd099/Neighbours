@@ -1,0 +1,12 @@
+Quelle: https://www.youtube.com/watch?v=Glp7THUpGow&list=PLPIKnqriPYgM
+
+https://de.wikipedia.org/wiki/Bin%C3%A4re_Suche
+https://de.wikipedia.org/wiki/Teile-und-herrsche-Verfahren
+
+
+Damit im nächsten Verlauf des Projektes der Zugriff auf bestimmte Punkten für Berechnungen effizienter und möglichst schnell erfolgt, wird ein binäres Suchalgorithmus und eine baumähnliche Datenstruktur kombiniert. Die binäre Suche basiert auf dem Prinzip "Teile und herrsche", indem die Suche nach jedem Schritt die Daten halbiert. Jedoch gibt es einige Voraussetzungen, die unbedingt erfüllt werden müssen, um überhaupt ein sinnvolles Ergebnis zustande kommt. Als erstes müssen die Daten, egal ob Zahlen, Namen oder etwas Anderes in einer bestimmten Reihenfolge sortiert sein. Meistens entweder absteigend oder aufsteigend, denn so erleichtert man sich die Arbeit und spart auch Zeit. Nach dem die Objekte sinnvoll und ordnungsgemäß im Array sind, durchläuft das Algorithmus die Liste, holt den gesuchten Wert, vergleicht ihn mit dem Median der Liste und gibt aus, ob es kleiner oder größer bzw. sich links oder rechts vom Median befindet. Somit ist das Suchen nach einem bestimmten Wert ressourcenschonender und nimmt nicht viel Zeit in Anspruch, zumal die Hälfte der Daten überhaupt nicht untersucht werden müssen. 
+
+
+  Zweitens, das aktuelle Durchlauf muss sich immer auf dasselbe Ordnungskriterium beziehen. 
+CPU --> ineffizient ,in die knie gezwungen --> if,rekursion
+binary search eine achse, --> KD treei reintheoretiscnh mehrer,praktiv vergleicht immer eine. er schmeißt dabei die hälfte weg.
